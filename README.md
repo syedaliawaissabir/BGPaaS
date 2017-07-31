@@ -1,5 +1,5 @@
 
-## 1. Introduction
+# 1. Introduction
 
 The contrail BGP implementation was designed from scratch to run on modern server environments. The main goals were to be able to take advantage of multicore CPUs, large (>4G) memory footprints and modern software development techniques.
 
@@ -21,7 +21,7 @@ All of these steps are to be performed for the new functionality to work success
 
 ## 2. Problem statement
 
-#### Modify the value of route origin when a route controller generates a route ####
+Modify the value of route origin when a route controller generates a route
 
 
 ## 3. Proposed solution
@@ -50,15 +50,15 @@ Describe pros and cons of alternatives considered.
 
 + Add bpp_origin in bgp_sess_attrs in **controller/src/config/utils/provision_bgp.py**.
 
-### 3.3 User workflow impact
+### 3.2 User workflow impact
 
 Contrail GUI allows the user define a new route origin with multiple options. User can click advanced options in Create to view the BGP Origin field. It has four options: IGP, EGP, INCOMPLETE or NONE to be selected by the user.
 
-### 3.4 UI changes
+### 3.3 UI changes
 
 Details in section 4.1 below.
 
-### 3.5 Notification impact
+### 3.4 Notification impact
 
 There were no changes made in logs, UVEs or alarms.
 
@@ -176,11 +176,11 @@ There are no dependencies for this feature.
 ## 9. Testing
 ### 9.1 Unit test
 
-GUI unit test: Check if values are visible on frontend and are passed to the backend.
++ GUI unit test: Check if values are visible on frontend and are passed to the backend.
 
-IFMAP unit test: Check whether value passed from front end has been received on IFMAP server.
++ IFMAP unit test: Check whether value passed from front end has been received on IFMAP server.
 
-BGPaaS: Check that the value of BGP origin received can be overridden.
++ BGPaaS: Check that the value of BGP origin received can be overridden.
 
 
 ### 9.2 Dev test
