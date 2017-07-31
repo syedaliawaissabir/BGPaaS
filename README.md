@@ -20,8 +20,9 @@ All of these steps are to be performed for the new functionality to work success
 
 
 #2. Problem statement
-###Normalize route origin when learning routes from a VM/VNF.
-This feature request is related to BGP as a Service (i.e. the vRouter peering with a VNF running in a VM). It concerns the route origin field in BGP. On PNF routers it is possible to override the route origin field of incoming routes that are learned from peers. This same capability is needed when Contrail learns routes from VNFs. In particular, this is related to the vLB VNF because VNF does NOT want route origin to be part of the tiebreaker protocol when choosing between routes. It is necessary to be able to set the route origin field of routes learned from vLB VNFs to a single value across entire network so that differences in route origin value between different vLB instances won't contribute to route selection.
+
+###Modify the value of route origin when a route controller generates a route
+
 
 #3. Proposed solution
 Contrail by default exposes certain configurable options to the admin in management console which are eventually used by underlying service when making certain decisions or creating packets. In order to make origin field configurable, following set of changes are needed:
