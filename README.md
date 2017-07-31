@@ -1,5 +1,5 @@
 
-#1. Introduction
+## 1. Introduction
 
 The contrail BGP implementation was designed from scratch to run on modern server environments. The main goals were to be able to take advantage of multicore CPUs, large (>4G) memory footprints and modern software development techniques.
 
@@ -19,12 +19,12 @@ This blueprint provides a detailed description on defining a new origin field by
 All of these steps are to be performed for the new functionality to work successfully.
 
 
-#2. Problem statement
+## 2. Problem statement
 
-### Modify the value of route origin when a route controller generates a route
+#### Modify the value of route origin when a route controller generates a route ####
 
 
-#3. Proposed solution
+## 3. Proposed solution
 Contrail by default exposes certain configurable options to the admin in management console which are eventually used by underlying service when making certain decisions or creating packets. In order to make origin field configurable, following set of changes are needed:
 
 + Expose a configurable option (Origin) in BGPaaS admin UI
@@ -32,7 +32,7 @@ Contrail by default exposes certain configurable options to the admin in managem
 + From configuration node pass it to controller where BGP (core) implementation can access it.
 + If a user-specified value was provided, then use it otherwise follow existing logic
 
-##3.1 Alternatives considered
+### 3.1 Alternatives considered
 Describe pros and cons of alternatives considered.
 ##3.2 API schema changes
 
@@ -50,26 +50,26 @@ Describe pros and cons of alternatives considered.
 
 + Add bpp_origin in bgp_sess_attrs in **controller/src/config/utils/provision_bgp.py**.
 
-##3.3 User workflow impact
+### 3.3 User workflow impact
 
 Contrail GUI allows the user define a new route origin with multiple options. User can click advanced options in Create to view the BGP Origin field. It has four options: IGP, EGP, INCOMPLETE or NONE to be selected by the user.
 
-##3.4 UI changes
+### 3.4 UI changes
 
 Details in section 4.1 below.
 
-##3.5 Notification impact
+### 3.5 Notification impact
 
 There were no changes made in logs, UVEs or alarms.
 
 
 
-#4. Implementation
-##4.1  Work items
+## 4. Implementation
+### 4.1  Work items
 
 It has 4 modules. The first module involves the changes in configuration files mentioned in section 3.2 above. The rest of the changes are mentioned below.
 
-###4.1.1 UI changes
+#### 4.1.1 UI changes
 
 These steps are to be followed to make changes in contrail GUI to reflect the impact of modifications in schema:
 
@@ -87,33 +87,33 @@ On Front End, we get field of **BGP origin** in the tabs **Create**, **Edit** an
 
 An object is passed from front end to API Server when we create BGP as a service.
 
-###4.1.2 Controller                                                                                                                 
+#### 4.1.2 Controller                                                                                                                 
 Following changes are implemented in Controller to define a new origin field.                                 
-####4.1.2.1 BGP Config:
+##### 4.1.2.1 BGP Config:
 + **bgp_config.h:** In **bgp_config.h**, new attribute **bgp_origin** is added in **BgpNeighborConfig** class. For manipulation of this attribute, we have added a **getter/setter** in the same class.
 
 + **bgp_config.cc:** In **bgp_config.cc**, we call the setter method for **bgp_origin** defined in header file. The coding convention was followed and **bgp_origin** was added in **CopyValues** method and the same was done for **CompareTo** method.
 
 
-####4.1.2.2 BGP Peer:
+##### 4.1.2.2 BGP Peer:
 
 + In **bgp_peer.h** the new attribute **bgp_origin** is added in **BgpPeer** class.
 
 + In the file **bgp_peer.cc**, the **RibExportPolicy** in the **BuildRibExportPolicy** methodreturns an additional argument which is **bgp_origin**.
 
-####4.1.2.3 In BGPRibOut:
+##### 4.1.2.3 In BGPRibOut:
 
 + In **bgpRibout.h**, bgp origin function is defined which returns a constant value.
 
 + In **bgp_ribout.cc**, changes are made in the if statements of RibOut constructor.
 
-####4.1.2.4 BgpRibOutPolicy:
+##### 4.1.2.4 BgpRibOutPolicy:
 
 + In **bgp_rib_policy.h**, a new integer bgp origin is defined. 
 
 + **bgp_rib_policy.cc**: In the structure **RibExportPolicy**, we add the attribute **bgp_origin** so that origin attribute is advertised to all BGP Peers. In the structure **RibExportPolicy**, the attribute **bgp_origin** is set in the constructor method. As there are total 4 constructors for the structure **RibExportPolicy**, **bgp_origin** is set for the rest of 3 constructors. 
 
-####4.1.2.5 BgpShowConfig:
+##### 4.1.2.5 BgpShowConfig:
 
 + **bgp_show_config.cc**: In the **FillBgpNeighborConfigInfo** method, we set the **bgp_origin** for **ShowBgpNeighborConfig** with the value of **BgpNeighborConfig bgp_origin**.
 
@@ -121,9 +121,9 @@ Following changes are implemented in Controller to define a new origin field.
 
 + In **bgp_config_ifmap.cc**, **bgp_origin** attribute is set. 
 
-###4.1.3 Core files for BgpAttrOrigin:
+#### 4.1.3 Core files for BgpAttrOrigin:
 
-####4.1.3.1 BgpAttrOrigin:
+##### 4.1.3.1 BgpAttrOrigin:
 
 + **bgp_attr_base.h:** The BgpAttribute class defines an enumeration of Code which contain the BGP Attributes.  Origin being a part of BGP is assigned value 1.
 
@@ -131,50 +131,50 @@ Following changes are implemented in Controller to define a new origin field.
 
 + The class BgpAttr contains a getter/setter for Origin.
 
-####4.1.3.2 Bgp_attr.cc:
+##### 4.1.3.2 Bgp_attr.cc:
 
 + The declared methods in bgp_attr.h are implemented. A total of 3 different code flows are initiated within Contrail to set RouteOrigin attribute. **(1)** BGP Message Builder **(2)** Routing Instance **(3)** BGP XMPP RTarget Manager
 
-####4.1.3.3 BgpXmppRtargetManager:
+##### 4.1.3.3 BgpXmppRtargetManager:
 + **bgp_xmpp_rtarget_manager.cc**: In the GetRouteTargetRouteAttr method, the origin is set with a initiated a value of IGP (defined in enum OriginType in struct BgpAttrOrigin).
 
-####4.1.3.4 RoutingInstance:
+##### 4.1.3.4 RoutingInstance:
 + **routing_instance.cc**: In RoutingInstance class, the method AddRTargetRoute sets the origin with a value of IGP.
 
-####4.1.3.5 BgpMessageBuilder:
+##### 4.1.3.5 BgpMessageBuilder:
 + **bgp_message_builder.h**: In class BgpMessage, new private constants are defined. 
 + **bgp_message_builder.cc**: In BgpMessageBuilder class, the **StartReach** method has **RibOutAttr** type reference in the parameters. A BgpAttr type pointer is referenced to RibOutAttr attribute. 
 
-###4.1.4 Checking condition for overriding Bgp Origin value
+#### 4.1.4 Checking condition for overriding Bgp Origin value
 
 On creating BGPaas, we check if session.bgp_origin is not equal to 3. Then we override the current BGP origin. Otherwise, go with the default settings.
 
-####4.1.4.1 bgp_message_builder.cc:
+##### 4.1.4.1 bgp_message_builder.cc:
 
 Check if value of bgp_origin is set by the user from 0 to 2. Override in this case. Otherwise go with the default behavior.
 
-####4.1.4.2 bgp_xmpp_rtarget_manager.cc:
+##### 4.1.4.2 bgp_xmpp_rtarget_manager.cc:
 
 In this cc file, the override logic for bgp_origin is implemented.
 
-#5. Performance and scaling impact
-##5.1 API and control plane
+## 5. Performance and scaling impact
+### 5.1 API and control plane
 
 There are no changes in scalability of API and Control Plane.
-##5.2 Forwarding performance
+### 5.2 Forwarding performance
 We do not expect any change to the forwarding performance.
 
-#6. Upgrade
+## 6. Upgrade
 The BGP origin field is a new field and hence does not have any upgrade impact.
 
-#7. Deprecations
+## 7. Deprecations
 There are no deprecations when this change is made.
 
-#8. Dependencies
+## 8. Dependencies
 There are no dependencies for this feature.
 
-#9. Testing
-##9.1 Unit test
+## 9. Testing
+### 9.1 Unit test
 
 GUI unit test: Check if values are visible on frontend and are passed to the backend.
 
@@ -183,7 +183,7 @@ IFMAP unit test: Check whether value passed from front end has been received on 
 BGPaaS: Check that the value of BGP origin received can be overridden.
 
 
-##9.2 Dev test
+### 9.2 Dev test
 
 Flow Test Steps: 
 
@@ -195,10 +195,10 @@ Flow Test Steps:
 
 These tests were completed successfully.
 
-#10. Documentation Impact
+## 10. Documentation Impact
 BGP origin field details have to be added in user documentation.
 
-#11. References
+## 11. References
 [bgp_design](http://juniper.github.io/contrail-vnc/bgp_design.html)
 
 [adding-bgp-knob-to-opencontrail](http://www.opencontrail.org/adding-bgp-knob-to-opencontrail/)
